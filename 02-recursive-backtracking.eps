@@ -1,0 +1,179 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 595 842
+
+realtime srand
+
+2.835 dup scale
+4.75 4 translate
+1 setlinecap
+
+5 dup scale
+.08 setlinewidth
+
+/W 40 def
+/H 58 def
+
+% a b -> r
+/randrange {
+  1 index sub   % a b b-a
+  rand exch mod % a rand(b-a)
+  add           % a+rand(b-a) = r
+} def
+
+% a i j
+/swap {
+  2 index exch    % a i a j
+  4 copy 4 2 roll % a i a j a j a i
+  get             % a i a j a j a[i]
+  3 1 roll get    % a i a j a[i] a[j]
+  4 1 roll        % a i a[j] a j a[i]
+  put put
+} def
+
+% a -> a
+/shuf {
+  0 1 2 index length 2 sub {  % a i
+    dup 2 index dup           % a i i a a
+    5 1 roll                  % a a i i a
+    length randrange          % a a i randrange(i, len(a))
+    swap                      % a
+  } for                       % a
+} def
+
+/grid [
+  H {
+    [
+      W {
+        <<
+          /explored false
+          /north true
+          /south true
+          /east true
+          /west true
+          /from null
+          /order [/north /south /east /west] shuf
+          /i 0
+        >>
+      } repeat
+    ]
+  } repeat
+] def
+
+/opposites <<
+  /north /south
+  /east  /west
+  /south /north
+  /west  /east
+>> def
+
+% direction
+/opposite {
+  opposites exch get
+} def
+
+/move_x <<
+  /north 0
+  /east 1
+  /south 0
+  /west -1
+>> def
+
+/move_y <<
+  /north 1
+  /east 0
+  /south -1
+  /west 0
+>> def
+
+% x y direction
+/move {
+  move_y exch     % x y move_y direction
+  4 -1 roll       % y move_y direction x
+  move_x 2 index  % y move_y direction x move_x direction
+  get add         % y move_y direction x'
+  4 1 roll        % x' y move_y direction
+  get add         % x' y'
+} def
+
+% x y
+/explored? {
+  2 copy 2 copy
+  0 lt exch 0 lt
+  4 2 roll
+  H ge exch W ge
+  or or or {
+    true
+  }{
+    grid
+    exch get
+    exch get
+    /explored get
+  } ifelse
+} def
+
+% x y
+/explore {
+  /y exch def
+  /x exch def
+  /node grid y get x get def
+  node /explored true put
+
+  {
+    node /i get 4 lt {
+      /direction node /order get node /i get get def
+      node /i node /i get 1 add put
+      x y direction move
+      /ny exch def
+      /nx exch def
+      nx ny explored? not {
+        node direction false put
+        /x nx def
+        /y ny def
+        /node grid y get x get def
+        node direction opposite false put
+        node /from direction opposite put
+        node /explored true put
+      } if
+    } {
+      node /from get null ne {
+        x y node /from get move
+        /y exch def
+        /x exch def
+        /node grid y get x get def
+      } {
+        exit
+      } ifelse
+    } ifelse
+  } loop
+} def
+
+0 W randrange
+0 H randrange explore
+
+grid 0 get 0 get /south false put
+grid H 1 sub get W 1 sub get /north false put
+
+W 0 moveto
+W H lineto
+W 1 sub H moveto
+0 H lineto
+
+0 1 H 1 sub {
+  /y exch def
+  0 1 W 1 sub {
+    /x exch def
+    /node grid y get x get def
+    node /south get {
+      x y moveto
+      x 1 add y lineto
+    } if
+    node /west get {
+      x y moveto
+      x y 1 add lineto
+    } if
+  } for
+} for
+
+stroke
+
+showpage

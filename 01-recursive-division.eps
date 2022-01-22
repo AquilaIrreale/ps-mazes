@@ -1,0 +1,80 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 0 0 595 842
+
+2.835 dup scale
+4.75 4 translate
+1 setlinecap
+
+5 dup scale
+.08 setlinewidth
+
+/W 40 def
+/H 58 def
+
+realtime srand
+
+% a b -> r
+/randrange {
+  1 index sub   % a b b-a
+  rand exch mod % a rand(b-a)
+  add           % a+rand(b-a) = r
+} def
+
+% x y w h
+/divide {
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+
+  w 1 gt
+  h 1 gt or {
+    gsave
+
+      x y translate
+
+      0 w h add 2 sub randrange % r in [0, w-1 + h-1)
+
+      dup w 1 sub ge {
+        0 h translate
+        -90 rotate
+        w 1 sub sub       % r <- r - (w-1)
+        /h w /w h def def % h, w <- w, h
+      } if
+
+      1 add /wallx exch def % wallx = 1+r in [1, w-1]
+
+      /gapstarty 0 h randrange def
+      /gapendy gapstarty 1 add def
+
+      gapstarty 0 gt {
+        wallx 0         moveto
+        wallx gapstarty lineto
+        stroke
+      } if
+
+      gapendy h lt {
+        wallx gapendy moveto
+        wallx h       lineto
+        stroke
+      } if
+
+      0 0 wallx h
+      wallx 0 w wallx sub h
+      divide divide
+
+    grestore
+  } if
+} def
+
+1 0 moveto
+W 0 lineto
+W H lineto
+W 1 sub H moveto
+0 H lineto
+0 0 lineto
+stroke
+
+0 0 W H divide
+
+showpage
